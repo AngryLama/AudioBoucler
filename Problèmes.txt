@@ -1,3 +1,0 @@
-Courbe incorrecte pour les formats compressés
-Import mp4 et m4a impossible
-Aucun message quand l'import échou, seul solution fermer l'application
