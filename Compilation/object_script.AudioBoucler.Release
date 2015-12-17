@@ -1,0 +1,12 @@
+INPUT(
+./release\main.o
+./release\mainwindow.o
+./release\zonedessin.o
+./release\lecteur.o
+./release\infopiste.o
+./release\playlist.o
+./release\conversion.o
+./release\qrc_application.o
+./release\moc_mainwindow.o
+./release\moc_zonedessin.o
+);

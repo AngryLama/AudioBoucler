@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Icon/Ajout dossier musique.png</file>
+        <file>Icon/Ajout musique.png</file>
+        <file>Icon/Descendre.png</file>
+        <file>Icon/Monter.png</file>
+        <file>Icon/Pause.png</file>
+        <file>Icon/Play.png</file>
+        <file>Icon/Précédent.png</file>
+        <file>Icon/Stop.png</file>
+        <file>Icon/Suivant.png</file>
+        <file>Icon/Supprimer.png</file>
+        <file>Icon/Haut-parleur son.png</file>
+        <file>Icon/Muet.png</file>
+        <file>Icon/Boucle.png</file>
+        <file>Icon/Export.png</file>
+        <file>Icon/Import.png</file>
+    </qresource>
+</RCC>

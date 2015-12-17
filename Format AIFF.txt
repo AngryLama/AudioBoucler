@@ -1,0 +1,46 @@
+Byte order: Big-endian Offset   Length   Contents
+  0      4 bytes  "FORM"
+  4      4 bytes  <File size - 8>
+  8      4 bytes  "AIFF"
+[ // Chunks
+         4 bytes  <Chunk magic>
+         4 bytes  <Chunk data size(x)>
+        (x)bytes  <Chunk data>
+]*
+
+
+COMM chunk: Must be defined
+  0      4 bytes  "COMM"
+  4      4 bytes  <COMM chunk size>  // (=18)
+  8      2 bytes  <Number of channels(c)>
+ 10      4 bytes  <Number of frames(f)>
+ 14      2 bytes  <bits/samples(b)>  // 1..32
+ 16     10 bytes  <Sample rate (Extended 80-bit floating-point format)>
+
+FORM chunk:
+  0      4 bytes  "FORM"
+  4      4 bytes  <FORM chunk size(x)>
+  8     (x)bytes  <FORM chunk>
+
+INST chunk:
+  0      4 bytes  "INST"
+  4      4 bytes  <INST chunk size(x)>
+  8     (x)bytes  <INST chunk>
+
+MARK chunk:
+  0      4 bytes  "MARK"
+  4      4 bytes  <MARK chunk size(x)>
+  8     (x)bytes  <MARK chunk>
+
+SKIP chunk:
+  0      4 bytes  "SKIP"
+  4      4 bytes  <SKIP chunk size(x)>
+  8     (x)bytes  <SKIP chunk>
+
+SSND chunk: Must be defined
+  0      4 bytes  "SSND"
+  4      4 bytes  <Chunk size(x)>
+  8      4 bytes  <Offset(n)>
+ 12      4 bytes  <block size>       // (=0)
+ 16     (n)bytes  Comment
+ 16+(n) (s)bytes  <Sample data>      // (s) := (x) - (n) - 8
