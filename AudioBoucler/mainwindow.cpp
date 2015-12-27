@@ -35,7 +35,6 @@ MainWindow::MainWindow(QWidget *parent) :
     for(int x=0;x<4;x++){
         ui->tableWidget_Info->setItem(0,x,new QTableWidgetItem);
         ui->tableWidget_Info->item(0,x)->setTextAlignment(Qt::AlignCenter);
-        ui->tableWidget_Info->item(0,x)->setFlags(!Qt::ItemIsEditable);
         ui->tableWidget_Info->item(0,x)->setTextColor(Qt::black);
     }
 
@@ -266,11 +265,6 @@ void MainWindow::creerLigne(QString type, int x)
         ui->tableWidget_Touches->item(x,0)->setTextAlignment(Qt::AlignCenter);
         ui->tableWidget_Touches->item(x,1)->setTextAlignment(Qt::AlignCenter);
         ui->tableWidget_Touches->item(x,3)->setTextAlignment(Qt::AlignCenter);
-        //Vérouillage
-        ui->tableWidget_Touches->item(x,0)->setFlags(ui->tableWidget_Touches->item(x,0)->flags() ^ Qt::ItemIsEditable);
-        ui->tableWidget_Touches->item(x,1)->setFlags(ui->tableWidget_Touches->item(x,1)->flags() ^ Qt::ItemIsEditable);
-        ui->tableWidget_Touches->item(x,2)->setFlags(ui->tableWidget_Touches->item(x,2)->flags() ^ Qt::ItemIsEditable);
-        ui->tableWidget_Touches->item(x,3)->setFlags(ui->tableWidget_Touches->item(x,3)->flags() ^ Qt::ItemIsEditable);
     }
 }
 

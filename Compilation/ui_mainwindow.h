@@ -143,6 +143,8 @@ public:
         tableWidget_Info->setFont(font1);
         tableWidget_Info->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         tableWidget_Info->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tableWidget_Info->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        tableWidget_Info->setSelectionMode(QAbstractItemView::NoSelection);
         tableWidget_Touches = new QTableWidget(groupBox_Informations);
         if (tableWidget_Touches->columnCount() < 4)
             tableWidget_Touches->setColumnCount(4);
@@ -158,6 +160,8 @@ public:
         tableWidget_Touches->setGeometry(QRect(10, 90, 571, 61));
         tableWidget_Touches->setFont(font1);
         tableWidget_Touches->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tableWidget_Touches->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        tableWidget_Touches->setSelectionMode(QAbstractItemView::NoSelection);
         tableWidget_Touches->horizontalHeader()->setHighlightSections(false);
         tableWidget_Touches->raise();
         tableWidget_Info->raise();
