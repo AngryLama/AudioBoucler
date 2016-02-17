@@ -4,10 +4,11 @@
 #include <QtMultimedia>
 #include "conversion.h"
 
-class Lecteur
+class Lecteur:public QObject
 {
+    Q_OBJECT
 public:
-    Lecteur();
+    Lecteur(QObject *parent=0);
     ~Lecteur();
     void muet(bool etat){player->setMuted(etat);}
     bool estMuet(){return player->isMuted();}
@@ -31,6 +32,13 @@ public:
     int retourFrequence(){return player->metaData(QMediaMetaData::SampleRate).toInt();}
     QString retourEchantillonage(){return player->metaData(QMediaMetaData::MediaType).toString();}
     int retourValMoyenne(){return player->metaData(QMediaMetaData::AverageLevel).toInt();}
+
+signals:
+    tempsDisponible(qint64);
+
+private slots:
+    void on_tempsDisponible(qint64 value){emit tempsDisponible(value);}
+
 private:
     QMediaPlayer *player;
 };

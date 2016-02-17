@@ -1,8 +1,9 @@
 #include "lecteur.h"
 
-Lecteur::Lecteur()
+Lecteur::Lecteur(QObject *parent):QObject(parent)
 {
     player = new QMediaPlayer;
+    connect(player,SIGNAL(durationChanged(qint64)),this,SLOT(on_tempsDisponible(qint64)));
 }
 
 Lecteur::~Lecteur()
