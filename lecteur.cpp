@@ -1,30 +1,20 @@
 #include "lecteur.h"
 
-Lecteur::Lecteur(QObject *parent):QObject(parent)
+Lecteur::Lecteur(QObject *parent):QMediaPlayer(parent)
 {
-    player = new QMediaPlayer;
-    connect(player,SIGNAL(durationChanged(qint64)),this,SLOT(on_tempsDisponible(qint64)));
+
 }
 
 Lecteur::~Lecteur()
 {
-    delete player;
+
 }
 
 void Lecteur::lecture(QString piste, qint64 position)
 {
-    player->setMedia(QUrl::fromLocalFile(piste));
-    player->play();
-    changerPosition(position);
-}
-
-void Lecteur::changerOutput(QString nom)
-{
-    QMediaService *svc = player->service();
-    QAudioOutputSelectorControl *out = qobject_cast<QAudioOutputSelectorControl *>
-                                       (svc->requestControl(QAudioOutputSelectorControl_iid));
-    out->setActiveOutput(nom);
-    svc->releaseControl(out);
+    setMedia(QUrl::fromLocalFile(piste));
+    play();
+    setPosition(position);
 }
 
 int Lecteur::tempsActuelP()
@@ -40,21 +30,15 @@ int Lecteur::tempsActuelP()
 
 bool Lecteur::enArret()
 {
-    if(player->state()==QMediaPlayer::StoppedState)
-        return true;
-    else return false;
+    return (state()==QMediaPlayer::StoppedState);
 }
 
 bool Lecteur::enLecture()
 {
-    if(player->state()==QMediaPlayer::PlayingState)
-        return true;
-    else return false;
+    return (state()==QMediaPlayer::PlayingState);
 }
 
 bool Lecteur::enPause()
 {
-    if(player->state()==QMediaPlayer::PausedState)
-        return true;
-    else return false;
+    return (state()==QMediaPlayer::PausedState);
 }

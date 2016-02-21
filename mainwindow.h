@@ -128,7 +128,7 @@ private slots:
 
     void on_pushButton_Importer_clicked();
 
-    void on_finVerifTemps();
+    void on_finVerifTemps(qint64 value=0);
 
     void on_lineEdit_cursDebut_textEdited(const QString &arg1);
 
@@ -140,14 +140,16 @@ private slots:
 
     void on_pushButton_volume_clicked();
 
+    void on_finTimerVerificationErreurImportation();
+
 private:
     Ui::MainWindow *ui;
     QProgressBar *progressBar_Analyse;
     QString lastRepertoire;
     QList<zoneDessin*> pistes;
     QList<Playlist> playlist;
-    Lecteur lecteur;
-    QTimer *refresh,*verifTemps;
+    Lecteur *lecteur;
+    QTimer *refresh,*timerVerificationErreurImportation;
     QList<ImportPiste> listeImportPiste;
     QGraphicsOpacityEffect *effectG,*effectD;
     int enLectureP,enLecture,verifImport;

@@ -76,13 +76,17 @@ MainWindow::MainWindow(QWidget *parent) :
     //Initialisation Timer
     refresh = new QTimer;
     connect(refresh,SIGNAL(timeout()),this,SLOT(on_finTimerRefresh()));
-    verifTemps = new QTimer;
-    connect(verifTemps,SIGNAL(timeout()),this,SLOT(on_finVerifTemps()));
+    timerVerificationErreurImportation = new QTimer;
+    connect(timerVerificationErreurImportation,SIGNAL(timeout()),this,SLOT(on_finTimerVerificationErreurImportation()));
 
     //Création des widgets
     effectG = new QGraphicsOpacityEffect(ui->widget_G);
     effectD = new QGraphicsOpacityEffect(ui->widget_D);
     modifierOpacite(0.75);
+
+    //Lecteur
+    lecteur = new Lecteur();
+    connect(lecteur,SIGNAL(durationChanged(qint64)),this,SLOT(on_finVerifTemps(qint64)));
 
     //Initialisation de la liste des outputs
     on_pushButton_ActualiserOutput_clicked();
@@ -110,10 +114,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    delete lecteur;
     delete informations;
     delete progressBar_Analyse;
     delete refresh;
-    delete verifTemps;
     delete effectG;
     delete effectD;
     delete barreProgression;
@@ -473,7 +477,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         }else{
             enLectureP=ui->tableWidget_Touches->item(x,1)->text().toInt()-1;
             enLecture=0;
-            lecteur.lecture(playlist[enLectureP].retourCheminPiste(enLecture));
+            lecteur->lecture(playlist[enLectureP].retourCheminPiste(enLecture));
             ui->pushButton_Lecture->setEnabled(false);
             ui->pushButton_Pause->setEnabled(true);
             ui->pushButton_Stop->setEnabled(true);
@@ -499,7 +503,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event){
 
 void MainWindow::on_pushButton_Ajouter_clicked()
 {
-    QStringList retour=QFileDialog::getOpenFileNames(this,"Choisir un fichier audio",lastRepertoire,"Audio(*.mp3 *.wav *.aiff *.aif *.m4a *.flac *.ogg)");
+    QStringList retour=QFileDialog::getOpenFileNames(this,"Choisir un fichier audio",lastRepertoire,"Audio(*.mp3 *.wav *.aiff *.aif *.m4a *.flac *.ogg *.wma)");
     int y=0;
     for(int x=0;x<retour.length();x++){
         ImportPiste temp;
@@ -527,13 +531,13 @@ void MainWindow::on_pushButton_ActualiserOutput_clicked()
 
 void MainWindow::on_pushButton_Muet_clicked()
 {
-    if(!lecteur.estMuet()){
-        lecteur.muet(true);
+    if(!lecteur->estMuet()){
+        lecteur->muet(true);
         ui->pushButton_volume->setText("Volume : Muet");
         ui->pushButton_volume->setIcon(QIcon(":/Icon/Muet.png"));
         ui->pushButton_Muet->setIcon(QIcon(":/Icon/Muet.png"));
     }else{
-        lecteur.muet(false);
+        lecteur->muet(false);
         ui->pushButton_volume->setText("Volume : "+QString::number(ui->horizontalSlider_Volume->value())+"%");
         ui->pushButton_volume->setIcon(QIcon(":/Icon/Haut-parleur son.png"));
         ui->pushButton_Muet->setIcon(QIcon(":/Icon/Haut-parleur son.png"));
@@ -542,25 +546,25 @@ void MainWindow::on_pushButton_Muet_clicked()
 
 void MainWindow::on_horizontalSlider_Volume_valueChanged(int value)
 {
-    if(lecteur.estMuet())
+    if(lecteur->estMuet())
         on_pushButton_Muet_clicked();
-    lecteur.changerVolume(value);
+    lecteur->changerVolume(value);
     ui->pushButton_volume->setText("Volume : "+QString::number(value)+"%");
 }
 
 void MainWindow::on_pushButton_Lecture_clicked()
 {
-    if(lecteur.enPause()){
-        lecteur.reprendre();
+    if(lecteur->enPause()){
+        lecteur->reprendre();
     }else{
         if(ui->checkBox_Playlist->isChecked()){
             enLecture=ui->tableWidget_PistesPlaylist->currentRow();
             enLectureP=ui->tableWidget_Playlist->currentRow();
-            lecteur.lecture(playlist[enLectureP].retourCheminPiste(enLecture));
+            lecteur->lecture(playlist[enLectureP].retourCheminPiste(enLecture));
         }else{
             enLecture=ui->tableWidget_Pistes->currentRow();
             enLectureP=-1;
-            lecteur.lecture(pistes[enLecture]->info.retourChemin(),pistes[enLecture]->info.retourDebutI());
+            lecteur->lecture(pistes[enLecture]->info.retourChemin(),pistes[enLecture]->info.retourDebutI());
         }
     }
     ui->pushButton_Pause->setEnabled(true);
@@ -572,7 +576,7 @@ void MainWindow::on_pushButton_Lecture_clicked()
 
 void MainWindow::on_pushButton_Stop_clicked()
 {
-    lecteur.stop();
+    lecteur->stop();
     ui->pushButton_Lecture->setEnabled(true);
     ui->pushButton_Pause->setEnabled(false);
     ui->pushButton_Stop->setEnabled(false);
@@ -588,18 +592,18 @@ void MainWindow::on_finTimerRefresh()
         qint64 temp=0;
         for(int x=0;x<enLecture;x++)
             temp+=playlist[enLectureP].retourFinPiste(x);
-        temp+=lecteur.tempsActuelI();
+        temp+=lecteur->tempsActuelI();
         ui->label_tempsActuelPlaylist->setText(msToQString(temp));
         ui->progressBar_Playlist->setValue(temp);
     }else{
-        ui->lineEdit_tempsActuel->setText(lecteur.tempsActuelQ());
+        ui->lineEdit_tempsActuel->setText(lecteur->tempsActuelQ());
     }
 
     if(enLectureP==-1 && enLecture==ui->tableWidget_Pistes->currentRow()){
-        int val=(lecteur.tempsActuelI()*(width()-20))/pistes[ui->tableWidget_Pistes->currentRow()]->info.retourFinPisteI();
+        int val=(lecteur->tempsActuelI()*(width()-20))/pistes[ui->tableWidget_Pistes->currentRow()]->info.retourFinPisteI();
         barreProgression->setGeometry(10+val,60,1,280);
     }
-    if(enLectureP!=-1 && lecteur.tempsActuelI()>=playlist[enLectureP].retourFinPiste(enLecture)){
+    if(enLectureP!=-1 && lecteur->tempsActuelI()>=playlist[enLectureP].retourFinPiste(enLecture)){
         if(enLecture+1<playlist[enLectureP].nbPistes()){
             ui->tableWidget_PistesPlaylist->setCurrentCell(enLecture+1,0);
             on_pushButton_Lecture_clicked();
@@ -611,9 +615,9 @@ void MainWindow::on_finTimerRefresh()
         }
     }
     if(enLectureP==-1 && enLecture!=-1){
-        if(lecteur.tempsActuelI()>=pistes[enLecture]->info.retourFinI()){
+        if(lecteur->tempsActuelI()>=pistes[enLecture]->info.retourFinI()){
             if(pistes[enLecture]->info.retourBouclage())
-                lecteur.lecture(pistes[enLecture]->info.retourChemin(),pistes[enLecture]->info.retourDebutI());
+                lecteur->lecture(pistes[enLecture]->info.retourChemin(),pistes[enLecture]->info.retourDebutI());
             else on_pushButton_Stop_clicked();
         }
     }
@@ -665,7 +669,7 @@ void MainWindow::on_checkBox_Playlist_clicked(bool checked)
         coeff=1.2;
         decal=8;
     }
-    if(lecteur.enLecture())
+    if(lecteur->enLecture())
         on_pushButton_Stop_clicked();
     if(!ui->tableWidget_Playlist->rowCount())
         on_pushButton_nouvellePlaylist_clicked();
@@ -768,7 +772,7 @@ void MainWindow::on_pushButton_nouvellePlaylist_clicked()
 
 void MainWindow::on_pushButton_Supprimer_clicked()
 {
-    if(lecteur.enLecture())
+    if(lecteur->enLecture())
         on_pushButton_Stop_clicked();
     int nbSuppr;
     if(ui->checkBox_Playlist->isChecked()){
@@ -863,7 +867,11 @@ void MainWindow::on_pushButton_Descendre_clicked()
 
 void MainWindow::on_comboBox_Output_currentIndexChanged(const QString &arg1)
 {
-    lecteur.changerOutput(arg1);
+    QMediaService *svc = lecteur->service();
+    QAudioOutputSelectorControl *out = qobject_cast<QAudioOutputSelectorControl *>
+                                       (svc->requestControl(QAudioOutputSelectorControl_iid));
+    out->setActiveOutput(arg1);
+    svc->releaseControl(out);
 }
 
 void MainWindow::on_pushButton_AjouterDossier_clicked()
@@ -877,7 +885,7 @@ void MainWindow::on_pushButton_AjouterDossier_clicked()
 
     QDirIterator *recherche;
     QStringList filtre;
-    filtre << "*.mp3" << "*.wav" << "*.aiff" << "*.aif" << "*.m4a" << "*.flac" << "*.ogg";
+    filtre << "*.mp3" << "*.wav" << "*.aiff" << "*.aif" << "*.m4a" << "*.flac" << "*.ogg" << "*.wma";
 
     //if(ui->checkBox_SousDossiers->checkState())
         //recherche=new QDirIterator(source,filtre,QDir::Files | QDir::NoSymLinks, QDirIterator::Subdirectories);
@@ -1011,10 +1019,10 @@ void MainWindow::ajouterPiste()
                 progressBar_Analyse->show();
             }
             verifImport=0;
-            saveMuet=lecteur.estMuet();
-            lecteur.muet(true);
-            lecteur.lecture(listeImportPiste[0].chemin);
-            verifTemps->start(10);
+            saveMuet=lecteur->estMuet();
+            lecteur->muet(true);
+            lecteur->lecture(listeImportPiste[0].chemin);
+            timerVerificationErreurImportation->start(1000);
         }else{
             QMessageBox message;
             message.setWindowTitle("Erreur de fichier");
@@ -1119,7 +1127,7 @@ void MainWindow::on_tableWidget_Playlist_itemChanged(QTableWidgetItem *item)
 void MainWindow::on_pushButton_Pause_clicked()
 {
     refresh->stop();
-    lecteur.pause();
+    lecteur->pause();
     ui->pushButton_Pause->setEnabled(false);
     ui->pushButton_Lecture->setEnabled(true);
     ui->centralWidget->setFocus();
@@ -1182,7 +1190,7 @@ void MainWindow::on_tableWidget_PistesPlaylist_currentCellChanged(int currentRow
         ui->pushButton_Supprimer->setEnabled(true);
 
         //Mise à jour du temps actuel
-        if(lecteur.enArret() && playlist[ui->tableWidget_Playlist->currentRow()].nbPistes()==ui->tableWidget_PistesPlaylist->rowCount()){
+        if(lecteur->enArret() && playlist[ui->tableWidget_Playlist->currentRow()].nbPistes()==ui->tableWidget_PistesPlaylist->rowCount()){
             qint64 temp=0;
             for(int x=0;x<currentRow;x++)
                 temp+=playlist[ui->tableWidget_Playlist->currentRow()].retourFinPiste(x);
@@ -1353,34 +1361,34 @@ void MainWindow::on_pushButton_Importer_clicked()
     }
 }
 
-void MainWindow::on_finVerifTemps()
+void MainWindow::on_finVerifTemps(qint64 value)
 {
-    if(lecteur.tempsTotalI()>0){
+    if(value>0){
         progressBar_Analyse->setValue(progressBar_Analyse->maximum());
-        verifTemps->stop();
         progressBar_Analyse->hide();
         progressBar_Analyse->setValue(0);
+        timerVerificationErreurImportation->stop();
         int pos;
         if(listeImportPiste[0].isPlaylist){
             int posP=listeImportPiste[0].posP;
             pos=listeImportPiste[0].pos;
-            playlist[posP].definirFinPiste(pos,lecteur.tempsTotalI());
-            playlist[posP].definirFrequencePiste(pos,lecteur.retourFrequence());
-            playlist[posP].definirDebitPiste(pos,lecteur.retourDebit());
+            playlist[posP].definirFinPiste(pos,lecteur->tempsTotalI());
+            playlist[posP].definirFrequencePiste(pos,lecteur->retourFrequence());
+            playlist[posP].definirDebitPiste(pos,lecteur->retourDebit());
         }else{
             pos=listeImportPiste[0].pos;
             while(pos>pistes.count()-1)
                 pos--;
             ui->label_Titre->setText(pistes[pos]->info.retourNom());
-            pistes[pos]->info.definirFinPiste(lecteur.tempsTotalI());
+            pistes[pos]->info.definirFinPiste(lecteur->tempsTotalI());
             if(listeImportPiste[0].debut!=0)
                 pistes[pos]->info.changerDebut(listeImportPiste[0].debut);
             if(listeImportPiste[0].fin!=0)
                 pistes[pos]->info.changerFin(listeImportPiste[0].fin);
-            else pistes[pos]->info.changerFin(lecteur.tempsTotalI());
-            pistes[pos]->info.definirFrequence(lecteur.retourFrequence());
-            pistes[pos]->info.definirDebit(lecteur.retourDebit());
-            pistes[pos]->info.definirValMoyenne(lecteur.retourValMoyenne());
+            else pistes[pos]->info.changerFin(lecteur->tempsTotalI());
+            pistes[pos]->info.definirFrequence(lecteur->retourFrequence());
+            pistes[pos]->info.definirDebit(lecteur->retourDebit());
+            pistes[pos]->info.definirValMoyenne(lecteur->retourValMoyenne());
             masquerLabelTemps(true);
             pistes[pos]->spectre();
             bouclagePiste<<new QCheckBox;
@@ -1395,8 +1403,8 @@ void MainWindow::on_finVerifTemps()
             ui->horizontalSlider_fin->setEnabled(true);
             masquerLabelTemps(false);
         }
-        lecteur.stop();
-        lecteur.muet(saveMuet);
+        lecteur->stop();
+        lecteur->muet(saveMuet);
         actualiser();
         if(listeImportPiste[0].isPlaylist==ui->checkBox_Playlist->isChecked()){
             if(ui->checkBox_Playlist->isChecked()){
@@ -1413,28 +1421,6 @@ void MainWindow::on_finVerifTemps()
             informations->setText("Une erreur s'est produite lors de l'importation du fichier:"+erreur);
             erreur.clear();
             informations->exec();
-        }
-    }else{
-        verifImport+=100;
-        progressBar_Analyse->setValue(progressBar_Analyse->value()+100);
-        if(verifImport>2000){
-            progressBar_Analyse->setValue(progressBar_Analyse->maximum());
-            verifTemps->stop();
-            progressBar_Analyse->hide();
-            progressBar_Analyse->setValue(0);
-            lecteur.stop();
-            lecteur.muet(saveMuet);
-            erreur+="\n"+listeImportPiste.first().chemin;
-            listeImportPiste.removeFirst();
-            pistes.removeLast();
-            if(listeImportPiste.count()!=0)
-                ajouterPiste();
-            else if(erreur!=""){
-                informations->setWindowTitle("Importation");
-                informations->setText("Une erreur s'est produite lors de l'importation du fichier:"+erreur);
-                erreur.clear();
-                informations->exec();
-            }
         }
     }
 }
@@ -1483,5 +1469,29 @@ void MainWindow::on_pushButton_volume_clicked()
         if(ui->groupBox_Parametres->isVisible())
             ui->groupBox_Parametres->hide();
         ui->groupBox_volume->show();
+    }
+}
+
+void MainWindow::on_finTimerVerificationErreurImportation()
+{
+    if(lecteur->enArret())
+    {
+        progressBar_Analyse->setValue(progressBar_Analyse->maximum());
+        progressBar_Analyse->hide();
+        progressBar_Analyse->setValue(0);
+        timerVerificationErreurImportation->stop();
+        lecteur->stop();
+        lecteur->muet(saveMuet);
+        erreur+="\n"+listeImportPiste.first().chemin;
+        listeImportPiste.removeFirst();
+        pistes.removeLast();
+        if(listeImportPiste.count()!=0)
+            ajouterPiste();
+        else if(erreur!=""){
+            informations->setWindowTitle("Importation");
+            informations->setText("Une erreur s'est produite lors de l'importation du fichier:"+erreur);
+            erreur.clear();
+            informations->exec();
+        }
     }
 }
